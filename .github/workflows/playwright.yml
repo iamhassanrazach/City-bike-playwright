@@ -1,0 +1,35 @@
+# MISSION 5 — Complete this workflow; submit a PR to trigger the quality gate.
+name: CityBike E2E Quality Gate
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install npm packages
+        run: npm ci
+
+      - name: Install Playwright Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Execute tests; a failing test must fail the job
+        run: npx playwright test
+
+      - name: Upload the HTML report even when tests fail
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-html-report
+          path: playwright-report/
+          retention-days: 30
